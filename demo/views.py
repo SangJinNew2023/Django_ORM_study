@@ -19,7 +19,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         slug_data = data.validated_data.get("slug")
         description_data = data.validated_data.get("description")
 
-        # DB에 데이터 생성
+        #데이터 생성
         obj = Category.objects.create(
             title=title_data, slug=slug_data, description=description_data,
         )
@@ -27,6 +27,59 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=['POST'])  # post만 허용
+    def save_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None)
+        data.is_valid(raise_exception=True)
+
+        title_data = data.validated_data.get("title")
+        slug_data = data.validated_data.get("slug")
+        description_data = data.validated_data.get("description")
+
+        obj = Category() #model
+        obj.title = title_data
+        obj.slug = slug_data
+        obj.description = description_data
+        obj.save()
+
+        serializer = self.serializer_class(obj)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @action(detail=False, methods=['POST'])  # post만 허용
+    def get_or_create_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None)
+        data.is_valid(raise_exception=True)
+
+        title_data = data.validated_data.get("title")
+        slug_data = data.validated_data.get("slug")
+
+        obj, _ = Category.objects.get_or_create(title=title_data, slug=slug_data)
+
+        serializer = self.serializer_class(obj)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['POST'])  # post만 허용
+    def bulk_create_data(self, request, *args, **kwargs):
+        data = self.serializer_class(data=request.data or None, many=True) #many=True시리얼라이저가 값이 여러개라고 인식을 해서 list 형태로 반환
+        data.is_valid(raise_exception=True)
+
+        new_data=[]
+
+        for row in data.validated_data:
+            new_data.append(
+                Category(
+                    title=row["title"],
+                    slug=row["slug"],
+                    description=row["description"],
+                )
+            )
+        if new_data:
+            new_data = Category.objects.bulk_create(new_data)
+
+        # serializer = self.serializer_class(new_data) #여러개의 데이터 생성시는 이부분은 삭제하고 Response에 serializer.data는 메세지로 대체
+
+        return Response("Successfully created data", status=status.HTTP_201_CREATED)
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
@@ -48,3 +101,4 @@ class PostViewSet(viewsets.ModelViewSet):
 # and for serializing output. Typically, you must either set this attribute, or override the get_serializer_class() method.
 #.is_valid(raise_exception=True)는 유요성 에러 발생시 HTTP 400 Bad Rquest 응답
 #data.validated_data.get("title")는 data의 validated된 데이터 중 'title'인 데이터만 get
+#many=True 를 설정해주면 시리얼라이저가 값이 여러개라고 인식을 해서 list 형태로 반환을 해준다
