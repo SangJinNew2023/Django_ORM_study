@@ -15,13 +15,13 @@ class Category(models.Model):
     description = models.CharField(max_length=200, null=True, blank=True)
     #null=True는 null 허용,  blank=True는 form 에서 빈채로 저장되는 것을 허용
 
-class Post(models.model):
+class Post(models.Model):
     author = models.ForeignKey(User, related_name="blog_posts", on_delete=models.CASCADE)
     title = models.CharField(max_length=200, unique=True) #unique=True는 값이 겹치지 않게 한다.
     slug = models.SlugField(max_length=200) #storing URL slugs in a relational database
-    summary = models.CharField(max_length=200, nul=True, blank=True)
+    summary = models.CharField(max_length=200, null=True, blank=True)
     content = models.TextField()
-    status = models.Charield(max_length=1, choices=STATUS.choices, default=STATUS.DRAFT)
+    status = models.CharField(max_length=1, choices=STATUS.choices, default=STATUS.DRAFT)
     image = models.ImageField(upload_to="post", default='post/sample.jpg')
     category = models.ManyToManyField(Category, related_name="posts")
     # related_name을 설정하면 category.post__set.all()로 특정 카테고리에 해당하는 post만 검색하던것을 category.posts.all() 형태로 사용가능하다.
@@ -35,7 +35,7 @@ class Comment(models.Model):
     post = models.ForeignKey(Post, related_name="comments", on_delete=models.CASCADE) #related_name="comments"를 사용하면 query시 post.comments.all()처럼 사용가능
     author = models.ForeignKey(User, related_name="comments", on_delete=models.CASCADE)
     text = models.TextField()
-    approved_comment = models.BolleanField(default=False)
+    approved_comment = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 
@@ -43,5 +43,5 @@ class Comment(models.Model):
         return self.text
 
 class Like(models.Model):
-    user = models.Foreignkey(User, related_name="likes", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="likes", on_delete=models.CASCADE)
     post = models.ForeignKey(Post, related_name="likes", on_delete=models.CASCADE)
